@@ -20,7 +20,7 @@ class CraftFontsTests(unittest.TestCase):
     def test_shared_workflows_share_one_pinned_commit(self):
         ref = default_ref('release.yml')
         self.assertRegex(ref, r'^[0-9a-f]{40}$')
-        for name in ('freebsd.yml', 'ci.yml'):
+        for name in ('freebsd.yml', 'gate.yml'):
             with self.subTest(workflow=name):
                 self.assertEqual(default_ref(name), ref)
 

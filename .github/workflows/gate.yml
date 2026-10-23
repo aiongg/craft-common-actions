@@ -1,4 +1,4 @@
-name: "CI"
+name: "Gate"
 
 # The quality gate the craft apps run on pull requests and pushes to main: one job per runner in
 # `os`, each running `command` (by default `cargo xtask ci`) with the suite's shared setup. App-only

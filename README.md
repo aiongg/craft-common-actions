@@ -350,7 +350,7 @@ jobs:
       pin-changes-only: true
 ```
 
-### 7. `ci.yml`
+### 7. `gate.yml`
 
 The quality gate for an app's pull requests and pushes to main. It runs `command` (by default
 `cargo xtask ci`) on each runner in `os`, after the suite's shared setup:
@@ -392,7 +392,7 @@ concurrency:
 jobs:
   gate:
     # Tracks @main so suite-wide CI fixes reach every app without a PR in each repository.
-    uses: storytold/craft-common-actions/.github/workflows/ci.yml@main
+    uses: storytold/craft-common-actions/.github/workflows/gate.yml@main
     with:
       packages: >-
         pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxcb1-dev libxcursor-dev
@@ -407,7 +407,7 @@ with per-OS environment and a shorter Windows gate (PDFCraft's call):
 ```yaml
 jobs:
   gate:
-    uses: storytold/craft-common-actions/.github/workflows/ci.yml@main
+    uses: storytold/craft-common-actions/.github/workflows/gate.yml@main
     with:
       os: ${{ (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-ci')) && '["ubuntu-24.04","windows-latest"]' || '["ubuntu-24.04"]' }}
       craft-fonts-ref: 3d9ab3a132ed0eff457e424226a435a901da30d3

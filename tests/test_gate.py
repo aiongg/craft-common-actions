@@ -1,5 +1,5 @@
-"""The shared CI workflow: pinned actions, a cache only the default branch writes, and caller input
-that reaches the shell only through the environment."""
+"""The shared gate workflow: pinned actions, a cache only the default branch writes, and caller
+input that reaches the shell only through the environment."""
 from pathlib import Path
 import os
 import re
@@ -10,7 +10,7 @@ import unittest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKFLOW = yaml.load((ROOT / '.github/workflows/ci.yml').read_text(), Loader=yaml.BaseLoader)
+WORKFLOW = yaml.load((ROOT / '.github/workflows/gate.yml').read_text(), Loader=yaml.BaseLoader)
 STEPS = WORKFLOW['jobs']['gate']['steps']
 OWN_ACTION = re.compile(r'^storytold/craft-common-actions/actions/[a-z0-9-]+@main$')
 
@@ -19,7 +19,7 @@ def step(name):
     return next(s for s in STEPS if s.get('name') == name)
 
 
-class CiWorkflowTests(unittest.TestCase):
+class GateWorkflowTests(unittest.TestCase):
     def test_third_party_actions_are_pinned_to_a_commit(self):
         for s in STEPS:
             if 'uses' in s:
