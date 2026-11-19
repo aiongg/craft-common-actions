@@ -176,6 +176,16 @@ on:
         required: false
         # Same default as actions/rust-cache, which explains the v2 bump.
         default: "v2"
+      cache-workspace-crates:
+        description: "Keep the workspace crates' compiled libraries and unit-test executables in the dependency cache, and reset source mtimes from the diff against the commit the cache was built from so Cargo rebuilds only what changed"
+        type: boolean
+        required: false
+        default: false
+      trial-save-on-pull-request:
+        description: "Trial only: let pull requests save the shard-1 cache entry (scoped to the pull request)"
+        type: boolean
+        required: false
+        default: false
       cache-save-on-dispatch:
         description: "Allow manually dispatched branch runs to save their branch-scoped dependency cache; pull requests never write"
         type: boolean
@@ -420,12 +430,20 @@ jobs:
       # The lint part builds in check mode, so it keeps an entry of its own (`<profile>-lint`)
       # instead of racing the test part for the `gate` entry. Shard legs restore the test part's
       # entry, and shard 1 alone saves it, so the shards do not race each other for it.
-      - uses: storytold/craft-common-actions/actions/rust-cache@main
+      - uses: aiongg/craft-common-actions/actions/rust-cache@trial-keep-artifacts
         with:
           cache-version: ${{ inputs.cache-version }}
           job: ${{ matrix.part == 'lint' && 'lint' || inputs.cache-name != '' && format('gate-{0}', inputs.cache-name) || '' }}
-          save-if: ${{ github.event_name != 'pull_request' && (github.ref_name == github.event.repository.default_branch || (inputs.cache-save-on-dispatch && github.event_name == 'workflow_dispatch')) && (matrix.part == 'lint' || matrix.part == 'warm' || inputs.warm-command == '' && matrix.shard <= 1) }}
+          save-if: ${{ (github.event_name != 'pull_request' && (github.ref_name == github.event.repository.default_branch || (inputs.cache-save-on-dispatch && github.event_name == 'workflow_dispatch')) && (matrix.part == 'lint' || matrix.part == 'warm' || inputs.warm-command == '' && matrix.shard <= 1)) || (inputs.trial-save-on-pull-request && github.event_name == 'pull_request' && matrix.part == 'shard' && matrix.shard == 1) }}
           cache-on-failure: "false"
+          cache-workspace-crates: ${{ inputs.cache-workspace-crates && matrix.part != 'lint' }}
+
+      - name: Restore mtimes
+        if: inputs.cache-workspace-crates && matrix.part != 'lint'
+        uses: aiongg/craft-common-actions/actions/restore-mtimes@trial-keep-artifacts
+        with:
+          mode: restore
+          craft-fonts-ref: ${{ inputs.craft-fonts-ref }}
 
       # After rust-cache, so its key does not depend on RUSTC_WRAPPER.
       - name: Install sccache
@@ -556,6 +574,14 @@ jobs:
             echo "::error title=Gate timed out::the gate command ran for over $GATE_TIMEOUT min and was stopped. The 'Processes running one minute before the gate timeout' group shows what was still running; for cargo test, the 'has been running for over 60 seconds' lines name the hung tests."
           fi
           exit "$status"
+
+      # The marker is saved with the cache entry in rust-cache's post step.
+      - name: Record the cache commit
+        if: inputs.cache-workspace-crates && matrix.part != 'lint'
+        uses: aiongg/craft-common-actions/actions/restore-mtimes@trial-keep-artifacts
+        with:
+          mode: record
+          craft-fonts-ref: ${{ inputs.craft-fonts-ref }}
 
       # A gate that changed Cargo.lock ran against a lockfile that is not the one in the repository.
       - name: Lockfile unchanged

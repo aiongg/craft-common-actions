@@ -40,6 +40,14 @@ inputs:
     required: false
     default: "false"
 
+  cache-workspace-crates:
+    description: >-
+      Keep the workspace crates' libraries and library unit-test executables in the cache (rust-cache's
+      cache-workspace-crates). Pair it with restore-mtimes so Cargo sees unchanged sources as older
+      than the cached outputs
+    required: false
+    default: "false"
+
 runs:
   using: "composite"
   steps:
@@ -177,6 +185,8 @@ runs:
         workspaces: ${{ steps.target.outputs.workspaces }}
         save-if: ${{ steps.save.outputs.save }}
         cache-on-failure: ${{ inputs.cache-on-failure }}
+        cache-workspace-crates: ${{ inputs.cache-workspace-crates }}
+        cache-directories: ${{ inputs.cache-workspace-crates == 'true' && '.ci-cache-meta' || '' }}
 
     # An empty CARGO_HOME is falsy to rust-cache, so it leaves the variable out of the environment
     # hash and falls back to $HOME/.cargo for the paths it caches (src/config.ts: `value &&` in the
@@ -192,3 +202,5 @@ runs:
         workspaces: ${{ steps.target.outputs.workspaces }}
         save-if: ${{ steps.save.outputs.save }}
         cache-on-failure: ${{ inputs.cache-on-failure }}
+        cache-workspace-crates: ${{ inputs.cache-workspace-crates }}
+        cache-directories: ${{ inputs.cache-workspace-crates == 'true' && '.ci-cache-meta' || '' }}
