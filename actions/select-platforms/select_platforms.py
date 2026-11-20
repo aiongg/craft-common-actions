@@ -245,7 +245,7 @@ def test_selection(changed, paths, docs, workspace):
     seeds = set()
     # [trial] storytold/craft-libs's test-selection PR: leave its own files out of the test decision.
     changed = [p for p in changed if p not in (
-        '.github/workflows/workspace.yml', 'scripts/test-workspace-tests.py', 'crates/pdf/Cargo.toml',
+        '.github/workflows/workspace.yml', '.github/workflows/actions.lock', 'scripts/test-workspace-tests.py', 'crates/pdf/Cargo.toml',
         'crates/svg/Cargo.toml', 'crates/fonts-build/tests/consumer/Cargo.toml')]
     for path in changed:
         pattern = matches(path, BUILD_SETUP + tuple(paths))
